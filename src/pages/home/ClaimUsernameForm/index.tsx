@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Form, FormAnnotation } from './styles'
 import { z } from 'zod'
+import { useRouter } from 'next/router'
 
 const claimUsernameFormSchema = z.object({
   // usando regex para evitar que o usuário coloque números/espaços etc
@@ -25,13 +26,20 @@ export const ClaimUsernameForm = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<ClaimUsernameFormData>({
     resolver: zodResolver(claimUsernameFormSchema),
   })
 
+  const router = useRouter()
+
+  //  é interessante essa função ser assíncrona, por causa do isSubmitting, assim, esse estado
+  // de submit vai durar até que o redirecionamento do router.push seja realizado
   async function handleClaimUsername(data: ClaimUsernameFormData) {
-    console.log(data)
+    const { username } = data
+
+    // enviando o username como parâmetro de rota
+    await router.push(`/register?username=${username}`)
   }
 
   return (
@@ -43,7 +51,7 @@ export const ClaimUsernameForm = () => {
           placeholder="seu-usuario"
           {...register('username')}
         />
-        <Button size="sm" type="submit">
+        <Button size="sm" type="submit" disabled={isSubmitting}>
           Reservar
           <ArrowRight />
         </Button>
