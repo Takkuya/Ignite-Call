@@ -1,0 +1,28 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// model => tabelas ou collections em bancos NOSQL
+model User {
+  // definindo os campos
+  // @id => campo primary key
+  // uuid => preenchimento automático do ID com um id aleatório e único
+  id         String   @id @default(uuid())
+  // username único
+  username   String   @unique
+  name       String
+  // now => preenche a função com a hora que o registro foi preenchido no DB
+  created_at DateTime @default(now())
+
+  // colocando o nome que eu quero para as minhas tabelas
+  // isso pq o prisma cria por padrão utilizando o nome que passamos no model
+  @@map("users")
+}
