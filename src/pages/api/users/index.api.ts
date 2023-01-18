@@ -1,5 +1,6 @@
 import { prisma } from '@/src/lib/prisma'
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { setCookie } from 'nookies'
 
 export default async function handler(
   req: NextApiRequest,
@@ -35,6 +36,21 @@ export default async function handler(
       username,
     },
   })
+
+  // preciso enviar o res para ele criar o header/cabeçalho
+  setCookie(
+    {
+      res,
+    },
+    '@ignite-call:userId',
+    user.id,
+    // é obrigatório passar o tempo de duração de um cookie
+    {
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      // cookies está acessível em toda a aplicação
+      path: '/',
+    },
+  )
 
   return res.status(201).json(user)
 }
