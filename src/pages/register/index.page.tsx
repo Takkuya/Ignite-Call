@@ -57,6 +57,9 @@ export default function Register() {
         name: data.name,
         username: data.username,
       })
+
+      // redirecionando o usuário
+      await router.push('/register/connect-calendar')
     } catch (err) {
       // caso o erro seja um objeto, e dentro de response eu tenha data e dentro de data
       // eu tenha message
