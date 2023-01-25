@@ -15,14 +15,48 @@ model User {
   // definindo os campos
   // @id => campo primary key
   // uuid => preenchimento automático do ID com um id aleatório e único
-  id         String   @id @default(uuid())
+  id         String    @id @default(uuid())
   // username único
-  username   String   @unique
+  username   String    @unique
   name       String
   // now => preenche a função com a hora que o registro foi preenchido no DB
-  created_at DateTime @default(now())
+  created_at DateTime  @default(now())
+  email      String?   @unique
+  avatar_url String?
+  accounts   Account[]
+  sessions   Session[]
 
   // colocando o nome que eu quero para as minhas tabelas
   // isso pq o prisma cria por padrão utilizando o nome que passamos no model
   @@map("users")
+}
+
+model Account {
+  id                  String  @id @default(cuid())
+  user_id             String
+  type                String
+  provider            String
+  provider_account_id String
+  refresh_token       String?
+  access_token        String?
+  expires_at          Int?
+  token_type          String?
+  scope               String?
+  id_token            String?
+  session_state       String?
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([provider, provider_account_id])
+  @@map("accounts")
+}
+
+model Session {
+  id            String   @id @default(cuid())
+  session_token String   @unique
+  user_id       String
+  expires       DateTime
+  user          User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
 }
