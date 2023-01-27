@@ -1,16 +1,72 @@
+import { NextApiRequest, NextApiResponse } from 'next'
 import { Adapter } from 'next-auth/adapters'
+import { destroyCookie, parseCookies } from 'nookies'
 import { prisma } from '../prisma'
 
-export const PrismaAdapter = (): Adapter => {
+export const PrismaAdapter = (
+  req: NextApiRequest,
+  res: NextApiResponse,
+): Adapter => {
   return {
-    async createUser(user) {},
+    // com base no id de usuário do cookie eu preciso preencher as demais informações
+    // o problema é que o PrismaAdapter não tem acesso aos cookies
+    // isso porque só temos acesso aos cookies através do req e res
+    async createUser(user) {
+      // buscando todos os cookies
+      // realizamos a desestruturação para pegar um único cookies já que o parseCookies retorna todos os cookies
+      // chamamos ele de userIdOnCookies, o nome que eu quero para a variável
+      const { '@ignite-call:userId': userIdOnCookies } = parseCookies({ req })
+
+      if (!userIdOnCookies) {
+        throw new Error('User ID not found on cookies.')
+      }
+
+      // conectando o usuário ao prisma
+      const prismaUser = await prisma.user.update({
+        where: {
+          id: userIdOnCookies,
+        },
+        data: {
+          name: user.name,
+          email: user.email,
+          avatar_url: user.avatar_url,
+        },
+      })
+
+      // depois que o usuário foi utilizado vamos apagar o cookies
+      // sempre que modificamos os cookies utilizamos o res
+      // se estamos buscando utilizamos o req
+      destroyCookie(
+        { res },
+        '@ignitecall:userId',
+        // apagando os cookies em todas as páginas
+        {
+          path: '/',
+        },
+      )
+
+      return {
+        id: prismaUser.id,
+        name: prismaUser.name,
+        username: prismaUser.username,
+        // usamos o ! para falar para o TypeScript que esses dados vão ser informados
+        avatar_url: prismaUser.avatar_url!,
+        email: prismaUser.email!,
+        // enviamos como null pois ele não existe mais no nosso Model
+        emailVerified: null,
+      }
+    },
 
     async getUser(id) {
-      const user = await prisma.user.findUniqueOrThrow({
+      const user = await prisma.user.findUnique({
         where: {
           id,
         },
       })
+
+      if (!user) {
+        return null
+      }
 
       return {
         id: user.id,
@@ -24,12 +80,15 @@ export const PrismaAdapter = (): Adapter => {
       }
     },
     async getUserByEmail(email) {
-      // findUniqueOrThrow => basicamente diz para ele achar algum dado e caso ele não ache retorna um erro
-      const user = await prisma.user.findUniqueOrThrow({
+      const user = await prisma.user.findUnique({
         where: {
           email,
         },
       })
+
+      if (!user) {
+        return null
+      }
 
       return {
         id: user.id,
@@ -43,7 +102,8 @@ export const PrismaAdapter = (): Adapter => {
       }
     },
     async getUserByAccount({ providerAccountId, provider }) {
-      const { user } = await prisma.account.findUniqueOrThrow({
+      // precisa ser um findUnique
+      const account = await prisma.account.findUnique({
         where: {
           provider_provider_account_id: {
             provider,
@@ -55,6 +115,12 @@ export const PrismaAdapter = (): Adapter => {
           user: true,
         },
       })
+
+      if (!account) {
+        return null
+      }
+
+      const { user } = account
 
       return {
         id: user.id,
@@ -126,7 +192,7 @@ export const PrismaAdapter = (): Adapter => {
       }
     },
     async getSessionAndUser(sessionToken) {
-      const { user, ...session } = await prisma.session.findUniqueOrThrow({
+      const prismaSession = await prisma.session.findUnique({
         where: {
           session_token: sessionToken,
         },
@@ -134,6 +200,12 @@ export const PrismaAdapter = (): Adapter => {
           user: true,
         },
       })
+
+      if (!prismaSession) {
+        return null
+      }
+
+      const { user, ...session } = prismaSession
 
       return {
         session: {
@@ -171,6 +243,14 @@ export const PrismaAdapter = (): Adapter => {
         userId: prismaSession.user_id,
         expires: prismaSession.expires,
       }
+    },
+
+    async deleteSession(sessionToken) {
+      await prisma.session.delete({
+        where: {
+          session_token: sessionToken,
+        },
+      })
     },
   }
 }
