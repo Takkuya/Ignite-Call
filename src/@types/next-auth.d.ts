@@ -9,4 +9,9 @@ declare module 'next-auth' {
     username: string
     avatar_url: string
   }
+
+  // criamos essa interface por causa do que retornamos no [...nextauth].api.ts
+  interface Session{
+    user: User
+  }
 }

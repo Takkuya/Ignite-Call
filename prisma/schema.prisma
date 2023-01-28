@@ -15,16 +15,19 @@ model User {
   // definindo os campos
   // @id => campo primary key
   // uuid => preenchimento automático do ID com um id aleatório e único
-  id         String    @id @default(uuid())
+  id            String             @id @default(uuid())
   // username único
-  username   String    @unique
-  name       String
+  username      String             @unique
+  name          String
   // now => preenche a função com a hora que o registro foi preenchido no DB
-  created_at DateTime  @default(now())
-  email      String?   @unique
-  avatar_url String?
-  accounts   Account[]
-  sessions   Session[]
+  created_at    DateTime           @default(now())
+  email         String?            @unique
+  avatar_url    String?
+  accounts      Account[]
+  sessions      Session[]
+  // utilizamos camel case aqui, pois esses campos que não são um primitivo vão ser utilizados apenas pelo Prisma
+  // e nesse caso ele é um relacionamento
+  timeIntervals UserTimeInterval[]
 
   // colocando o nome que eu quero para as minhas tabelas
   // isso pq o prisma cria por padrão utilizando o nome que passamos no model
@@ -59,4 +62,19 @@ model Session {
   user          User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("sessions")
+}
+
+// cada entrada vai ser relacionado a um intervalo de tempo disponível para aquele usuário
+// exemplo: se o usuário tiver disponibilidade para 3 dias, vamos ter 3 registros diferentes.
+model UserTimeInterval {
+  id                    String @id @default(uuid())
+  week_day              Int
+  time_start_in_minutes Int
+  time_end_in_minutes   Int
+
+  // relação com o usuário 1 usuário pode ter vários time intervals
+  user    User   @relation(fields: [user_id], references: [id])
+  user_id String
+
+  @@map("user_time_intervals")
 }

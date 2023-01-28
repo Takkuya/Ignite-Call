@@ -51,7 +51,7 @@ export const buildNextAuthOptions = (
       },
 
       // tudo que é retornado dessa função é o que é passado para o front
-      // criamos essa função, pois por padrão só temos acesso ao name e ao email
+      // criamos essa função, pois por padrão só temos accesso ao name e ao email
       // sendo que precisamos ter acesso as outras informações também
       async session({ session, user }) {
         return {
