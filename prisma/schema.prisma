@@ -19,6 +19,7 @@ model User {
   // username único
   username      String             @unique
   name          String
+  bio           String?
   // now => preenche a função com a hora que o registro foi preenchido no DB
   created_at    DateTime           @default(now())
   email         String?            @unique

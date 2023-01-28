@@ -10,6 +10,7 @@ import {
   Text,
   TextInput,
 } from '@ignite-ui/react'
+import { useRouter } from 'next/router'
 import { ArrowRight } from 'phosphor-react'
 import { Controller, useFieldArray, useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -92,6 +93,7 @@ export default function TimeIntervals() {
     },
   })
 
+  const router = useRouter()
   const weekDays = getWeekDays()
 
   // permite iterar/manipular um campo do formulário que é um array
@@ -105,6 +107,8 @@ export default function TimeIntervals() {
     const formData = data as TimeIntervalsFormOutput
 
     await api.post('/users/time-intervals', formData)
+
+    await router.push('/register/update-profile')
   }
 
   return (

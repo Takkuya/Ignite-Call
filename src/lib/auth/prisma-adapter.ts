@@ -1,11 +1,11 @@
-import { NextApiRequest, NextApiResponse } from 'next'
+import { NextApiRequest, NextApiResponse, NextPageContext } from 'next'
 import { Adapter } from 'next-auth/adapters'
 import { destroyCookie, parseCookies } from 'nookies'
 import { prisma } from '../prisma'
 
 export const PrismaAdapter = (
-  req: NextApiRequest,
-  res: NextApiResponse,
+  req: NextApiRequest | NextPageContext['req'],
+  res: NextApiResponse | NextPageContext['res'],
 ): Adapter => {
   return {
     // com base no id de usuário do cookie eu preciso preencher as demais informações
