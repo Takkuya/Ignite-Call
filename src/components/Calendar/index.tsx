@@ -1,5 +1,8 @@
+import { api } from '@/src/lib/axios'
 import { getWeekDays } from '@/src/utils/get-week-days'
+import { useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
+import { useRouter } from 'next/router'
 import { CaretLeft, CaretRight } from 'phosphor-react'
 import { useMemo, useState } from 'react'
 import {
@@ -23,11 +26,17 @@ type CalendarProps = {
   onDateSelected: (date: Date) => void
 }
 
+type BlockedDates = {
+  blockedWeekDays: number[]
+}
+
 export const Calendar = ({ selectedDate, onDateSelected }: CalendarProps) => {
   const [currentDate, setCurrentDate] = useState(() => {
     // setando o dia de 1 pois só quero saber a informação do mês e ano, não quero saber a informação do dia
     return dayjs().set('date', 1)
   })
+
+  const router = useRouter()
 
   function handlePreviousMonth() {
     // subtract => subtrair 1 mês dela
@@ -50,9 +59,34 @@ export const Calendar = ({ selectedDate, onDateSelected }: CalendarProps) => {
   const currentMonth = currentDate.format('MMMM')
   const currentYear = currentDate.format('YYYY')
 
+  const username = String(router.query.username)
+
+  // carregando os dados da API toda vez que o selectedDate mudar
+  // utilizando react query
+  const { data: blockedDates } = useQuery<BlockedDates>(
+    // fazer o cache por mês e por ano
+    ['blocked-dates', currentDate.get('year'), currentDate.get('month')],
+    async () => {
+      const response = await api.get(`/users/${username}/blocked-dates`, {
+        params: {
+          year: currentDate.get('year'),
+          month: currentDate.get('month'),
+        },
+      })
+
+      return response.data
+    },
+  )
+
   // array de arrays, cada array vai representar os dias de 1 semana
   // vamos usar o useMemo para não precisarmos executar os cálculos toda hora que o código renderizar
   const calendarWeeks = useMemo(() => {
+    // validação para o typescript não reclamar
+    // e também evitamos que o calendário apareça antes de terminamos a chamada de API que busca as dadas bloqueadas
+    if (!blockedDates) {
+      return []
+    }
+
     const daysInMonthArray = Array.from({
       length: currentDate.daysInMonth(),
     }).map((_, idx) => {
@@ -97,7 +131,13 @@ export const Calendar = ({ selectedDate, onDateSelected }: CalendarProps) => {
 
     const daysInMonthArrayFormatted = daysInMonthArray.map((date) => {
       // desabilitado dias antes das 23:59 de hj
-      return { date, disabled: date.endOf('day').isBefore(new Date()) }
+      // ou desabilitar caso inclua um dia da semana que está desabilitado
+      return {
+        date,
+        disabled:
+          date.endOf('day').isBefore(new Date()) ||
+          blockedDates.blockedWeekDays.includes(date.get('day')),
+      }
     })
 
     const nextMonthFillArrayFormatted = nextMonthFillArray.map((date) => {
@@ -135,7 +175,7 @@ export const Calendar = ({ selectedDate, onDateSelected }: CalendarProps) => {
     )
 
     return calendarWeeks
-  }, [currentDate])
+  }, [currentDate, blockedDates])
 
   return (
     <CalendarContainer>
