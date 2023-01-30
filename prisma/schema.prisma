@@ -29,7 +29,7 @@ model User {
   // utilizamos camel case aqui, pois esses campos que não são um primitivo vão ser utilizados apenas pelo Prisma
   // e nesse caso ele é um relacionamento
   timeIntervals UserTimeInterval[]
-  Scheduling    Scheduling[]
+  scheduling    Scheduling[]
 
   // colocando o nome que eu quero para as minhas tabelas
   // isso pq o prisma cria por padrão utilizando o nome que passamos no model
