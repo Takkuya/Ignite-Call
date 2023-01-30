@@ -18,7 +18,12 @@ type CalendarWeek = {
 
 type CalendarWeeks = CalendarWeek[]
 
-export const Calendar = () => {
+type CalendarProps = {
+  selectedDate: Date | null
+  onDateSelected: (date: Date) => void
+}
+
+export const Calendar = ({ selectedDate, onDateSelected }: CalendarProps) => {
   const [currentDate, setCurrentDate] = useState(() => {
     // setando o dia de 1 pois só quero saber a informação do mês e ano, não quero saber a informação do dia
     return dayjs().set('date', 1)
@@ -91,7 +96,8 @@ export const Calendar = () => {
     )
 
     const daysInMonthArrayFormatted = daysInMonthArray.map((date) => {
-      return { date, disabled: false }
+      // desabilitado dias antes das 23:59 de hj
+      return { date, disabled: date.endOf('day').isBefore(new Date()) }
     })
 
     const nextMonthFillArrayFormatted = nextMonthFillArray.map((date) => {
@@ -161,7 +167,10 @@ export const Calendar = () => {
                 {days.map(({ date, disabled }) => {
                   return (
                     <td key={date.toString()}>
-                      <CalendarDay disabled={disabled}>
+                      <CalendarDay
+                        onClick={() => onDateSelected(date.toDate())}
+                        disabled={disabled}
+                      >
                         {date.get('date')}
                       </CalendarDay>
                     </td>
