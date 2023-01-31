@@ -49,5 +49,23 @@ export default async function handle(
     )
   })
 
-  return res.json({ blockedWeekDays })
+  // retornando dias que estão cheios
+  // uma única query precisa retornar todas as informações de todos os dias que estão cheios
+  // seria praticamente inviável fazer uma query por dia
+
+  // não temos como fazer essa query usando o formato do Prisma, por isso precisamos fazer uma query "raw"
+  const blockedDatesRaw = await prisma.$queryRaw`
+    -- buscar todos os schedulings possíveis daquele mês daquele usuário
+    SELECT *
+    FROM schedulings S
+
+    -- pegando os schedulings de um usuário específico
+    WHERE S.user_id = ${user.id}
+      -- retorna ano e mês
+      -- verificamos se essa data é igual ao ano/mês da query/parâmetro da rota
+      AND DATE_FORMAT(S.date, "%Y-%m") = ${`${year}-${month}`}
+  
+  `
+
+  return res.json({ blockedWeekDays, blockedDatesRaw })
 }
