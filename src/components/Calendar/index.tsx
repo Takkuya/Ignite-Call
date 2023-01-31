@@ -28,6 +28,7 @@ type CalendarProps = {
 
 type BlockedDates = {
   blockedWeekDays: number[]
+  blockedDates: number[]
 }
 
 export const Calendar = ({ selectedDate, onDateSelected }: CalendarProps) => {
@@ -70,7 +71,10 @@ export const Calendar = ({ selectedDate, onDateSelected }: CalendarProps) => {
       const response = await api.get(`/users/${username}/blocked-dates`, {
         params: {
           year: currentDate.get('year'),
-          month: currentDate.get('month'),
+          // colocamos + 1 pois no javascript o mês começa em 0
+          // utilizamos esse String com padStart por causa que a API não estava aceitando o mês (month) com apenas 1 caractere
+          // e nos casos de meses menores que 10, ele estava enviando um único número, por isso adicionamos o 0 antes
+          month: String(currentDate.get('month') + 1).padStart(2, '0'),
         },
       })
 
@@ -136,7 +140,9 @@ export const Calendar = ({ selectedDate, onDateSelected }: CalendarProps) => {
         date,
         disabled:
           date.endOf('day').isBefore(new Date()) ||
-          blockedDates.blockedWeekDays.includes(date.get('day')),
+          blockedDates.blockedWeekDays.includes(date.get('day')) ||
+          // dia específico para bloquear (dia 20, 30 etc)
+          blockedDates.blockedDates.includes(date.get('date')),
       }
     })
 

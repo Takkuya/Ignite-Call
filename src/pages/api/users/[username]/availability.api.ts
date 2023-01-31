@@ -99,9 +99,15 @@ export default async function handle(
   const availableTimes = possibleTimes.filter((time) => {
     // manter apenas quando não existe
     // some => pelo menos um
-    return !blockedTimes.some(
+    const isTimeBlocked = blockedTimes.some(
       (blockedTime) => blockedTime.date.getHours() === time,
     )
+
+    // validando se a hora que estamos percorrendo está no passado
+    const isTimeInPast = referenceDate.set('hour', time).isBefore(new Date())
+
+    // retorna caso não esteja bloqueada e não esteja no passado
+    return !isTimeBlocked && !isTimeInPast
   })
 
   return res.json({ possibleTimes, availableTimes })
