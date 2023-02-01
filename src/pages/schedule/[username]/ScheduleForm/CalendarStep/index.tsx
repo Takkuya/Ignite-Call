@@ -17,7 +17,11 @@ type Availability = {
   availableTimes: number[]
 }
 
-export const CalendarStep = () => {
+type CalendarStepProps = {
+  onSelectDateTime: (date: Date) => void
+}
+
+export const CalendarStep = ({ onSelectDateTime }: CalendarStepProps) => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
 
   // pegando username da rota
@@ -56,6 +60,16 @@ export const CalendarStep = () => {
     { enabled: !!selectedDate },
   )
 
+  // vai ser chamada quando o usuário selecionar um horário
+  function handleSelectTime(hour: number) {
+    const dateWithTime = dayjs(selectedDate)
+      .set('hour', hour)
+      .startOf('hour')
+      .toDate()
+
+    onSelectDateTime(dateWithTime)
+  }
+
   return (
     <Container isTimePickerOpen={isDateSelected}>
       <Calendar selectedDate={selectedDate} onDateSelected={setSelectedDate} />
@@ -72,6 +86,7 @@ export const CalendarStep = () => {
                 // padStart => preenchendo com 0 caso seja menor seja números abaixo de 10
                 <TimePickerItem
                   key={hour}
+                  onClick={() => handleSelectTime(hour)}
                   disabled={!availability.availableTimes.includes(hour)}
                 >
                   {String(hour).padStart(2, '0')}:00h
