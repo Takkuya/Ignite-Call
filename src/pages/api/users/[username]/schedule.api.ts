@@ -1,5 +1,7 @@
+import { getGoogleOAuthToken } from '@/src/lib/google'
 import { prisma } from '@/src/lib/prisma'
 import dayjs from 'dayjs'
+import { google } from 'googleapis'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { z } from 'zod'
 
@@ -61,13 +63,49 @@ export default async function handle(
       .json({ message: 'There is another scheduling at the same time' })
   }
 
-  await prisma.scheduling.create({
+  const scheduling = await prisma.scheduling.create({
     data: {
       name,
       email,
       observations,
       date: schedulingDate.toDate(),
       user_id: user.id,
+    },
+  })
+
+  const calendar = google.calendar({
+    version: 'v3',
+    auth: await getGoogleOAuthToken(user.id),
+  })
+
+  await calendar.events.insert({
+    // pega o calendário principal, o padrão para a criação de eventos
+    calendarId: 'primary',
+    conferenceDataVersion: 1,
+    requestBody: {
+      // título
+      summary: `Ignite Call ${name}`,
+      description: observations,
+      start: {
+        dateTime: schedulingDate.format(),
+      },
+      end: {
+        // adicionamos 1 hora pois o horário de término sempre é 1 hora depois do horário de ínicio
+        dateTime: schedulingDate.add(1, 'hour').format(),
+      },
+      // convidados
+      attendees: [{ email, displayName: name }],
+      // criar o envento como chamada do Google Meet
+      conferenceData: {
+        // criar a chamada no momento que eu criar o evento na agenda do usuário
+        createRequest: {
+          // precisa ser um valor qualquer porém único
+          requestId: scheduling.id,
+          conferenceSolutionKey: {
+            type: 'hangoutsMeet',
+          },
+        },
+      },
     },
   })
 
