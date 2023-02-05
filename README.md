@@ -7,8 +7,6 @@ Projeto desenvolvido durante o módulo 06 no curso Ignite da Rocketseat. O proje
 <img src=".github/Step4.PNG" align="center" />
 <img src=".github/Calendar.PNG" align="center" />
 
-&nbsp;
-
 ## 🛠️ Tecnologias
 
 * Next.js
@@ -19,3 +17,5 @@ Projeto desenvolvido durante o módulo 06 no curso Ignite da Rocketseat. O proje
 * Prisma
 * TypeScript
 
+## ☁️ Deploy
+[Ignite Call](https://ignite-call-44pa.vercel.app)
